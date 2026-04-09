@@ -1,0 +1,488 @@
+{
+  "info": {
+    "name": "Databricks - Full Export API Collection",
+    "description": "Complete Databricks API collection covering Auth, Tables, Export Operations, Tracking, Storage, Error Handling, Performance, Logging, and Configuration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "https://<your-workspace>.azuredatabricks.net", "type": "string" },
+    { "key": "TOKEN", "value": "<your-pat-or-oauth-token>", "type": "string" },
+    { "key": "WAREHOUSE_ID", "value": "<sql-warehouse-id>", "type": "string" },
+    { "key": "CLUSTER_ID", "value": "<cluster-id>", "type": "string" },
+    { "key": "JOB_ID", "value": "<job-id>", "type": "string" },
+    { "key": "RUN_ID", "value": "<run-id>", "type": "string" },
+    { "key": "STATEMENT_ID", "value": "<statement-id>", "type": "string" },
+    { "key": "CATALOG", "value": "main", "type": "string" },
+    { "key": "SCHEMA", "value": "gold", "type": "string" },
+    { "key": "TABLE", "value": "my_table", "type": "string" },
+    { "key": "CLIENT_ID", "value": "<oauth-client-id>", "type": "string" },
+    { "key": "CLIENT_SECRET", "value": "<oauth-client-secret>", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{TOKEN}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "OAuth2 - Get Access Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": { "raw": "{{BASE_URL}}/oidc/v1/token", "host": ["{{BASE_URL}}"], "path": ["oidc", "v1", "token"] },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials" },
+                { "key": "client_id", "value": "{{CLIENT_ID}}" },
+                { "key": "client_secret", "value": "{{CLIENT_SECRET}}" },
+                { "key": "scope", "value": "all-apis" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "OAuth2 - Well Known Config",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/oidc/.well-known/oauth-authorization-server", "host": ["{{BASE_URL}}"], "path": ["oidc", ".well-known", "oauth-authorization-server"] }
+          }
+        },
+        {
+          "name": "Enterprise User - List Users (SCIM)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/preview/scim/v2/Users", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "preview", "scim", "v2", "Users"] }
+          }
+        },
+        {
+          "name": "Enterprise User - Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/preview/scim/v2/Users/:id", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "preview", "scim", "v2", "Users", ":id"], "variable": [{ "key": "id", "value": "<user-id>" }] }
+          }
+        },
+        {
+          "name": "Enterprise User - Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/preview/scim/v2/Users", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "preview", "scim", "v2", "Users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schemas\": [\"urn:ietf:params:scim:schemas:core:2.0:User\"],\n  \"userName\": \"medrio.user@example.com\",\n  \"displayName\": \"Medrio User\",\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Enterprise User - Update User (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/preview/scim/v2/Users/:id", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "preview", "scim", "v2", "Users", ":id"], "variable": [{ "key": "id", "value": "<user-id>" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schemas\": [\"urn:ietf:params:scim:api:messages:2.0:PatchOp\"],\n  \"Operations\": [{ \"op\": \"replace\", \"path\": \"active\", \"value\": false }]\n}"
+            }
+          }
+        },
+        {
+          "name": "Enterprise User - Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/preview/scim/v2/Users/:id", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "preview", "scim", "v2", "Users", ":id"], "variable": [{ "key": "id", "value": "<user-id>" }] }
+          }
+        },
+        {
+          "name": "Validate Current User (Me)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/preview/scim/v2/Me", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "preview", "scim", "v2", "Me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ Configuration",
+      "item": [
+        {
+          "name": "Secrets - List Scopes",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/secrets/scopes/list", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "secrets", "scopes", "list"] }
+          }
+        },
+        {
+          "name": "Secrets - Create Scope",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/secrets/scopes/create", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "secrets", "scopes", "create"] },
+            "body": { "mode": "raw", "raw": "{\n  \"scope\": \"env-prod\",\n  \"initial_manage_principal\": \"users\"\n}" }
+          }
+        },
+        {
+          "name": "Secrets - Put Secret",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/secrets/put", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "secrets", "put"] },
+            "body": { "mode": "raw", "raw": "{\n  \"scope\": \"env-prod\",\n  \"key\": \"storage_account_key\",\n  \"string_value\": \"<secret-value>\"\n}" }
+          }
+        },
+        {
+          "name": "Secrets - List Secrets in Scope",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/secrets/list?scope=env-prod", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "secrets", "list"], "query": [{ "key": "scope", "value": "env-prod" }] }
+          }
+        },
+        {
+          "name": "Instance Profiles - List",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/instance-profiles/list", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "instance-profiles", "list"] }
+          }
+        },
+        {
+          "name": "Cluster Policies - List",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/policies/clusters/list", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "policies", "clusters", "list"] }
+          }
+        },
+        {
+          "name": "Warehouses - List All",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/warehouses", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "warehouses"] }
+          }
+        },
+        {
+          "name": "Warehouses - Get by ID (Health Check)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/warehouses/{{WAREHOUSE_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "warehouses", "{{WAREHOUSE_ID}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗂️ Tables",
+      "item": [
+        {
+          "name": "Unity Catalog - List Catalogs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/unity-catalog/catalogs", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "unity-catalog", "catalogs"] }
+          }
+        },
+        {
+          "name": "Unity Catalog - List Schemas",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/unity-catalog/schemas?catalog_name={{CATALOG}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "unity-catalog", "schemas"], "query": [{ "key": "catalog_name", "value": "{{CATALOG}}" }] }
+          }
+        },
+        {
+          "name": "Unity Catalog - List Tables (Discover Exportable)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/unity-catalog/tables?catalog_name={{CATALOG}}&schema_name={{SCHEMA}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "unity-catalog", "tables"], "query": [{ "key": "catalog_name", "value": "{{CATALOG}}" }, { "key": "schema_name", "value": "{{SCHEMA}}" }] }
+          }
+        },
+        {
+          "name": "Unity Catalog - Get Specific Table",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/unity-catalog/tables/{{CATALOG}}.{{SCHEMA}}.{{TABLE}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "unity-catalog", "tables", "{{CATALOG}}.{{SCHEMA}}.{{TABLE}}"] }
+          }
+        },
+        {
+          "name": "Unity Catalog - Get Schema Details (Gold Schema Export)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/unity-catalog/schemas/{{CATALOG}}.{{SCHEMA}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "unity-catalog", "schemas", "{{CATALOG}}.{{SCHEMA}}"] }
+          }
+        },
+        {
+          "name": "SQL - Show Tables in Schema",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SHOW TABLES IN {{CATALOG}}.{{SCHEMA}}\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"30s\"\n}" }
+          }
+        },
+        {
+          "name": "SQL - Describe Table Extended",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"DESCRIBE TABLE EXTENDED {{CATALOG}}.{{SCHEMA}}.{{TABLE}}\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"30s\"\n}" }
+          }
+        },
+        {
+          "name": "SQL - Retrieve Table History",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"DESCRIBE HISTORY {{CATALOG}}.{{SCHEMA}}.{{TABLE}}\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"30s\"\n}" }
+          }
+        },
+        {
+          "name": "SQL - Query information_schema.tables",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT table_name, table_type, created, last_altered FROM {{CATALOG}}.information_schema.tables WHERE table_schema = '{{SCHEMA}}'\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"30s\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚀 Export Operations",
+      "item": [
+        {
+          "name": "Async Export - Submit SQL Statement",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT * FROM {{CATALOG}}.{{SCHEMA}}.{{TABLE}}\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"0s\",\n  \"on_wait_timeout\": \"CONTINUE\",\n  \"format\": \"ARROW_STREAM\"\n}" }
+          }
+        },
+        {
+          "name": "Async Export - Submit Job Run",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.1/jobs/runs/submit", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "jobs", "runs", "submit"] },
+            "body": { "mode": "raw", "raw": "{\n  \"run_name\": \"Export - {{SCHEMA}}.{{TABLE}}\",\n  \"existing_cluster_id\": \"{{CLUSTER_ID}}\",\n  \"notebook_task\": {\n    \"notebook_path\": \"/Shared/export_notebook\",\n    \"base_parameters\": {\n      \"catalog\": \"{{CATALOG}}\",\n      \"schema\": \"{{SCHEMA}}\",\n      \"table\": \"{{TABLE}}\",\n      \"format\": \"parquet\"\n    }\n  }\n}" }
+          }
+        },
+        {
+          "name": "Snapshot Export - Full Table Select",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT * FROM {{CATALOG}}.{{SCHEMA}}.{{TABLE}}\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"0s\",\n  \"on_wait_timeout\": \"CONTINUE\"\n}" }
+          }
+        },
+        {
+          "name": "Time-Travel Export - By Version",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT * FROM {{CATALOG}}.{{SCHEMA}}.{{TABLE}} VERSION AS OF 5\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"0s\",\n  \"on_wait_timeout\": \"CONTINUE\"\n}" }
+          }
+        },
+        {
+          "name": "Time-Travel Export - By Timestamp",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT * FROM {{CATALOG}}.{{SCHEMA}}.{{TABLE}} TIMESTAMP AS OF '2024-01-01T00:00:00Z'\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"0s\",\n  \"on_wait_timeout\": \"CONTINUE\"\n}" }
+          }
+        },
+        {
+          "name": "Delta Export - CDC (Changes Since Last Export)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT * FROM table_changes('{{CATALOG}}.{{SCHEMA}}.{{TABLE}}', 1, 10)\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"0s\",\n  \"on_wait_timeout\": \"CONTINUE\"\n}" }
+          }
+        },
+        {
+          "name": "Export - Filter Tables with WHERE Clause",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements"] },
+            "body": { "mode": "raw", "raw": "{\n  \"statement\": \"SELECT * FROM {{CATALOG}}.{{SCHEMA}}.{{TABLE}} WHERE updated_at >= '2024-01-01'\",\n  \"warehouse_id\": \"{{WAREHOUSE_ID}}\",\n  \"wait_timeout\": \"0s\",\n  \"on_wait_timeout\": \"CONTINUE\"\n}" }
+          }
+        },
+        {
+          "name": "Create Export Job with Retry Logic",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.1/jobs/create", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "jobs", "create"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Databricks Export Job\",\n  \"max_retries\": 3,\n  \"min_retry_interval_millis\": 5000,\n  \"retry_on_timeout\": true,\n  \"timeout_seconds\": 3600,\n  \"tasks\": [\n    {\n      \"task_key\": \"export_task\",\n      \"existing_cluster_id\": \"{{CLUSTER_ID}}\",\n      \"notebook_task\": {\n        \"notebook_path\": \"/Shared/export_notebook\"\n      }\n    }\n  ]\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Tracking",
+      "item": [
+        {
+          "name": "Track SQL Statement Status",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements/{{STATEMENT_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements", "{{STATEMENT_ID}}"] }
+          }
+        },
+        {
+          "name": "Get Statement Result Chunk",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements/{{STATEMENT_ID}}/result/chunks/0", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements", "{{STATEMENT_ID}}", "result", "chunks", "0"] }
+          }
+        },
+        {
+          "name": "Track Job Run Status",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/jobs/runs/get?run_id={{RUN_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "jobs", "runs", "get"], "query": [{ "key": "run_id", "value": "{{RUN_ID}}" }] }
+          }
+        },
+        {
+          "name": "Get Job Run Output (Detailed Status)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/jobs/runs/get-output?run_id={{RUN_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "jobs", "runs", "get-output"], "query": [{ "key": "run_id", "value": "{{RUN_ID}}" }] }
+          }
+        },
+        {
+          "name": "List All Job Runs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.1/jobs/runs/list?job_id={{JOB_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "jobs", "runs", "list"], "query": [{ "key": "job_id", "value": "{{JOB_ID}}" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗄️ File Storage (DBFS)",
+      "item": [
+        {
+          "name": "DBFS - List Files",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/dbfs/list?path=/exports/", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "dbfs", "list"], "query": [{ "key": "path", "value": "/exports/" }] }
+          }
+        },
+        {
+          "name": "DBFS - Get File Status",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/dbfs/get-status?path=/exports/my_file.parquet", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "dbfs", "get-status"], "query": [{ "key": "path", "value": "/exports/my_file.parquet" }] }
+          }
+        },
+        {
+          "name": "DBFS - Create Directory",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/dbfs/mkdirs", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "dbfs", "mkdirs"] },
+            "body": { "mode": "raw", "raw": "{\n  \"path\": \"/exports/{{SCHEMA}}/{{TABLE}}\"\n}" }
+          }
+        },
+        {
+          "name": "DBFS - Read File Chunk",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/dbfs/read?path=/exports/my_file.csv&offset=0&length=1048576", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "dbfs", "read"], "query": [{ "key": "path", "value": "/exports/my_file.csv" }, { "key": "offset", "value": "0" }, { "key": "length", "value": "1048576" }] }
+          }
+        },
+        {
+          "name": "DBFS - Delete File",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/dbfs/delete", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "dbfs", "delete"] },
+            "body": { "mode": "raw", "raw": "{\n  \"path\": \"/exports/old_file.parquet\",\n  \"recursive\": false\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚠️ Error Handling & Permissions",
+      "item": [
+        {
+          "name": "Validate Permissions - Resource",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/permissions/jobs/{{JOB_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "permissions", "jobs", "{{JOB_ID}}"] }
+          }
+        },
+        {
+          "name": "Validate Permissions - Warehouse",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/permissions/sql/warehouses/{{WAREHOUSE_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "permissions", "sql", "warehouses", "{{WAREHOUSE_ID}}"] }
+          }
+        },
+        {
+          "name": "Validate Permissions - Cluster",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/permissions/clusters/{{CLUSTER_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "permissions", "clusters", "{{CLUSTER_ID}}"] }
+          }
+        },
+        {
+          "name": "Cancel Running SQL Statement",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/statements/{{STATEMENT_ID}}/cancel", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "statements", "{{STATEMENT_ID}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Cancel Running Job",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.1/jobs/runs/cancel", "host": ["{{BASE_URL}}"], "path": ["api", "2.1", "jobs", "runs", "cancel"] },
+            "body": { "mode": "raw", "raw": "{\n  \"run_id\": \"{{RUN_ID}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Logging & Health",
+      "item": [
+        {
+          "name": "Cluster Events (Logs)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/2.0/clusters/events", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "clusters", "events"] },
+            "body": { "mode": "raw", "raw": "{\n  \"cluster_id\": \"{{CLUSTER_ID}}\",\n  \"limit\": 50\n}" }
+          }
+        },
+        {
+          "name": "Health Check - Warehouse State",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/warehouses/{{WAREHOUSE_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "warehouses", "{{WAREHOUSE_ID}}"] }
+          }
+        },
+        {
+          "name": "Health Check - Cluster State",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/clusters/get?cluster_id={{CLUSTER_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "clusters", "get"], "query": [{ "key": "cluster_id", "value": "{{CLUSTER_ID}}" }] }
+          }
+        },
+        {
+          "name": "List All Warehouses (Health Overview)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/2.0/sql/warehouses", "host": ["{{BASE_URL}}"], "path": ["api", "2.0", "sql", "warehouses"] }
+          }
+        }
+      ]
+    }
+  ]
+}
