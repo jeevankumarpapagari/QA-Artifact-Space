@@ -1,0 +1,3820 @@
+{
+  "info": {
+    "_postman_id": "18877d30-4e7a-4ed9-b644-1dec5a16caac",
+    "name": "Databricks",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "41477528",
+    "_collection_link": "https://go.postman.co/collection/41477528-18877d30-4e7a-4ed9-b644-1dec5a16caac?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Get Clusters List",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.0/clusters/list",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "clusters",
+            "list"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Jobs List Under Server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/list?limit=100",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "list"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "100"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Run Load And Transform Job",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();\r",
+              "pm.environment.set(\"LATrunId\", response.run_id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"job_id\": {{load_and_transform_JobId}}\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/run-now",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "run-now"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Tasks From Load_and_transform Job Run",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const r = pm.response.json();",
+              "",
+              "// Build Task → RunId map",
+              "let map = {};",
+              "",
+              "r.tasks.forEach(t => {",
+              "    map[t.task_key] = t.run_id;",
+              "});",
+              "",
+              "// Store full mapping",
+              "pm.environment.set(\"TaskRunId\", JSON.stringify(map));",
+              "",
+              "// Extract and store merge_changes run_id if the task exists",
+              "const mergeChangesTask = r.tasks.find(t => t.task_key === \"merge_changes\");",
+              "if (mergeChangesTask) {",
+              "    pm.environment.set(\"merge_changes_run_id\", mergeChangesTask.run_id);",
+              "}",
+              "",
+              "// Test to verify merge_changes_run_id is set when the task is present",
+              "pm.test(\"merge_changes_run_id is set when merge_changes task exists\", function () {",
+              "    const taskExists = r.tasks.some(t => t.task_key === \"merge_changes\");",
+              "    if (taskExists) {",
+              "        const storedValue = pm.environment.get(\"merge_changes_run_id\");",
+              "        pm.expect(storedValue).to.not.be.undefined;",
+              "        pm.expect(storedValue).to.not.be.null;",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/runs/get?run_id={{LATrunId}}",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "runs",
+            "get"
+          ],
+          "query": [
+            {
+              "key": "run_id",
+              "value": "{{LATrunId}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Load And Transform Job Status",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/runs/get?run_id={{LATrunId}}",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "runs",
+            "get"
+          ],
+          "query": [
+            {
+              "key": "run_id",
+              "value": "{{LATrunId}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get merge_changes Job Run Result",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/runs/get-output?run_id={{merge_changes_run_id}}",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "runs",
+            "get-output"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "run_id",
+              "value": "{{merge_changes_run_id}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Run eLearning New Job Run",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();\r",
+              "pm.environment.set(\"runId\", response.run_id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"job_id\": {{elearning_data_extraction_JobId}}\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/run-now",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "run-now"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Tasks From eLearning Job Run",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const r = pm.response.json();\r",
+              "\r",
+              "// Build Task → RunId map\r",
+              "let map = {};\r",
+              "\r",
+              "r.tasks.forEach(t => {\r",
+              "    map[t.task_key] = t.run_id;\r",
+              "});\r",
+              "\r",
+              "// Store full mapping\r",
+              "pm.environment.set(\"TaskRunId\", JSON.stringify(map));\r",
+              "\r",
+              "// Also store each task as its own variable\r",
+              "r.tasks.forEach(t => {\r",
+              "    const safeName = t.task_key.replace(/[^a-zA-Z0-9_]/g, \"_\");\r",
+              "    pm.environment.set(`TaskRunId_${safeName}`, t.run_id);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/runs/get?run_id={{runId}}",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "runs",
+            "get"
+          ],
+          "query": [
+            {
+              "key": "run_id",
+              "value": "{{runId}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get eLearning Job Status",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/runs/get?run_id={{runId}}",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "runs",
+            "get"
+          ],
+          "query": [
+            {
+              "key": "run_id",
+              "value": "{{runId}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get eLearning's GOLD Layer Job Result",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.1/jobs/runs/get-output?run_id={{TaskRunId_gold_elearning_data_transformation}}",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.1",
+            "jobs",
+            "runs",
+            "get-output"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "run_id",
+              "value": "{{TaskRunId_gold_elearning_data_transformation}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Warehouses List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const wh = pm.response.json().warehouses.find(w => w.state === \"RUNNING\");\r",
+              "pm.environment.set(\"warehouse_id\", wh.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/warehouses",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "warehouses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Check Table Existance",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks table existence API – full contract validation\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "\r",
+              "    // 1. Execution must succeed\r",
+              "    pm.expect(res.status).to.have.property(\"state\");\r",
+              "    pm.expect(res.status.state, \"Query did not succeed\").to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    // 2. Statement ID must exist\r",
+              "    pm.expect(res.statement_id, \"Missing statement_id\").to.be.a(\"string\").and.not.empty;\r",
+              "\r",
+              "    // 3. Result must not be truncated\r",
+              "    pm.expect(res.manifest.truncated, \"Result is truncated\").to.eql(false);\r",
+              "\r",
+              "    // 4. Exactly one row must be returned\r",
+              "    pm.expect(res.manifest.total_row_count, \"Manifest row count wrong\").to.eql(1);\r",
+              "    pm.expect(res.result.row_count, \"Result row count wrong\").to.eql(1);\r",
+              "\r",
+              "    // 5. Schema contract validation\r",
+              "    pm.expect(res.manifest.schema.column_count, \"Unexpected column count\").to.eql(1);\r",
+              "\r",
+              "    const col = res.manifest.schema.columns[0];\r",
+              "    pm.expect(col.name, \"Column name mismatch\").to.eql(\"table_exists\");\r",
+              "    pm.expect(col.type_name, \"Column type_name mismatch\").to.eql(\"LONG\");\r",
+              "    pm.expect(col.type_text, \"Column type_text mismatch\").to.eql(\"BIGINT\");\r",
+              "\r",
+              "    // 6. Data structure validation\r",
+              "    pm.expect(res.result.data_array, \"data_array is missing\").to.be.an(\"array\");\r",
+              "    pm.expect(res.result.data_array.length, \"data_array row count wrong\").to.eql(1);\r",
+              "    pm.expect(res.result.data_array[0], \"Row is not an array\").to.be.an(\"array\");\r",
+              "    pm.expect(res.result.data_array[0].length, \"Column count in row is wrong\").to.eql(1);\r",
+              "\r",
+              "    // 7. Value must be numeric\r",
+              "    const rawValue = res.result.data_array[0][0];\r",
+              "    pm.expect(rawValue, \"table_exists is not numeric\").to.match(/^\\d+$/);\r",
+              "\r",
+              "    // 8. Business rule: table must exist\r",
+              "    const tableExists = Number(rawValue);\r",
+              "    pm.expect(tableExists, \"Table does NOT exist in Databricks\").to.eql(1);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS table_exists FROM system.information_schema.tables WHERE table_catalog='edc_etl_dev_bran_04' AND table_schema='gold' AND table_name='elearning_status';\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Delta Metadata",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest & schema validation\r",
+              "pm.test(\"Schema column count is correct\", function () {\r",
+              "    pm.expect(res.manifest.schema.column_count).to.eql(17);\r",
+              "});\r",
+              "\r",
+              "// 4. Exactly one metadata row must be returned\r",
+              "pm.test(\"Exactly one table metadata row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract metadata row\r",
+              "const row = res.result.data_array[0];\r",
+              "\r",
+              "// Column positions (fixed by schema)\r",
+              "const format              = row[0];\r",
+              "const tableName           = row[2];\r",
+              "const location            = row[4];\r",
+              "const createdAt           = row[5];\r",
+              "const lastModified        = row[6];\r",
+              "const clusteringColumns   = row[8];\r",
+              "const numFiles            = Number(row[9]);\r",
+              "const sizeInBytes         = Number(row[10]);\r",
+              "const minReaderVersion    = Number(row[12]);\r",
+              "const minWriterVersion    = Number(row[13]);\r",
+              "\r",
+              "// 6. Delta format validation\r",
+              "pm.test(\"Table format is DELTA\", function () {\r",
+              "    pm.expect(format).to.eql(\"delta\");\r",
+              "});\r",
+              "\r",
+              "// 7. Table name validation\r",
+              "pm.test(\"Table name is correct\", function () {\r",
+              "    pm.expect(tableName).to.eql(\"edc_etl_dev_bran_04.gold.elearning_status\");\r",
+              "});\r",
+              "\r",
+              "// 8. Storage location validation\r",
+              "pm.test(\"Table storage location is present\", function () {\r",
+              "    pm.expect(location).to.not.be.null;\r",
+              "});\r",
+              "\r",
+              "// 9. Delta protocol version validation\r",
+              "pm.test(\"Delta protocol versions are valid\", function () {\r",
+              "    pm.expect(minReaderVersion).to.be.at.least(1);\r",
+              "    pm.expect(minWriterVersion).to.be.at.least(1);\r",
+              "});\r",
+              "\r",
+              "// 10. Clustering validation (MedrioUserId + CourseId)\r",
+              "pm.test(\"Table is clustered by expected columns\", function () {\r",
+              "    pm.expect(clusteringColumns).to.include(\"MedrioUserId\");\r",
+              "    pm.expect(clusteringColumns).to.include(\"CourseId\");\r",
+              "});\r",
+              "\r",
+              "// 11. File and size sanity checks\r",
+              "pm.test(\"Table has files and non-zero size\", function () {\r",
+              "    pm.expect(numFiles).to.be.above(0);\r",
+              "    pm.expect(sizeInBytes).to.be.above(0);\r",
+              "});\r",
+              "\r",
+              "// 12. Freshness check – lastModified must be yesterday or today (UTC)\r",
+              "const lastModifiedDate = new Date(lastModified);\r",
+              "const now = new Date();\r",
+              "\r",
+              "const diffDays = Math.floor(\r",
+              "    (Date.UTC(\r",
+              "        now.getUTCFullYear(),\r",
+              "        now.getUTCMonth(),\r",
+              "        now.getUTCDate()\r",
+              "    ) - Date.UTC(\r",
+              "        lastModifiedDate.getUTCFullYear(),\r",
+              "        lastModifiedDate.getUTCMonth(),\r",
+              "        lastModifiedDate.getUTCDate()\r",
+              "    )) / (1000 * 60 * 60 * 24)\r",
+              ");\r",
+              "\r",
+              "pm.test(\"Table was modified recently (≤ 1 day)\", function () {\r",
+              "    pm.expect(diffDays).to.be.at.most(1);\r",
+              "});\r",
+              "\r",
+              "// 13. Safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"DESCRIBE DETAIL edc_etl_dev_bran_04.gold.elearning_status;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Latest Operation",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM (DESCRIBE HISTORY edc_etl_dev_bran_04.gold.elearning_status) ORDER BY version DESC LIMIT 1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Destructive Operations",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM (DESCRIBE HISTORY edc_etl_dev_bran_04.gold.elearning_status) WHERE operation IN ('DELETE','TRUNCATE','OVERWRITE','MERGE') ORDER BY version DESC LIMIT 10;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Rewrite Volume",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) FROM (DESCRIBE HISTORY edc_etl_dev_bran_04.gold.elearning_status);\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Table Schema",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT column_name, ordinal_position, data_type, is_nullable FROM system.information_schema.columns WHERE table_catalog='edc_etl_dev_bran_04' AND table_schema='gold' AND table_name='elearning_status' ORDER BY ordinal_position;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Null Check of MedrioId or CourseId",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks COUNT validation – expecting zero records\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "\r",
+              "    /* 1️⃣ Query must succeed */\r",
+              "    pm.expect(res.status.state, \"SQL execution failed\").to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2️⃣ Result must not be truncated */\r",
+              "    pm.expect(res.manifest.truncated, \"Result was truncated\").to.eql(false);\r",
+              "\r",
+              "    /* 3️⃣ Exactly one row must be returned */\r",
+              "    pm.expect(res.manifest.total_row_count, \"Manifest row count mismatch\").to.eql(1);\r",
+              "    pm.expect(res.result.row_count, \"Result row count mismatch\").to.eql(1);\r",
+              "\r",
+              "    /* 4️⃣ Schema contract must match */\r",
+              "    pm.expect(res.manifest.schema.column_count, \"Unexpected column count\").to.eql(1);\r",
+              "\r",
+              "    const col = res.manifest.schema.columns[0];\r",
+              "    pm.expect(col.name, \"Wrong column name\").to.eql(\"count(1)\");\r",
+              "    pm.expect(col.type_name, \"Wrong column type\").to.eql(\"LONG\");\r",
+              "    pm.expect(col.type_text, \"Wrong column SQL type\").to.eql(\"BIGINT\");\r",
+              "\r",
+              "    /* 5️⃣ Data structure must be valid */\r",
+              "    pm.expect(res.result.data_array, \"data_array missing\").to.be.an(\"array\");\r",
+              "    pm.expect(res.result.data_array.length, \"data_array must have one row\").to.eql(1);\r",
+              "    pm.expect(res.result.data_array[0], \"Row is not an array\").to.be.an(\"array\");\r",
+              "    pm.expect(res.result.data_array[0].length, \"Row must have one column\").to.eql(1);\r",
+              "\r",
+              "    /* 6️⃣ Value must be numeric */\r",
+              "    const rawValue = res.result.data_array[0][0];\r",
+              "    pm.expect(rawValue, \"Returned value is not numeric\").to.match(/^\\d+$/);\r",
+              "\r",
+              "    /* 7️⃣ Business rule: count MUST be zero */\r",
+              "    const countValue = Number(rawValue);\r",
+              "    pm.expect(countValue, \"Data exists when it should NOT\").to.eql(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) FROM edc_etl_dev_bran_04.gold.elearning_status WHERE MedrioUserId IS NULL OR CourseId IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Check Duplicate MedrioId",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks API – empty result set contract\", function () {\r",
+              "    const res = pm.response.json();\r",
+              "\r",
+              "    /* 1️⃣ Query must succeed */\r",
+              "    pm.expect(res.status.state, \"SQL execution failed\").to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2️⃣ Result must NOT be truncated */\r",
+              "    pm.expect(res.manifest.truncated, \"Partial result returned\").to.eql(false);\r",
+              "\r",
+              "    /* 3️⃣ Schema must still be present (even if no data) */\r",
+              "    pm.expect(res.manifest.schema.column_count, \"Wrong column count\").to.eql(3);\r",
+              "\r",
+              "    const cols = res.manifest.schema.columns;\r",
+              "    pm.expect(cols[0].name).to.eql(\"MedrioUserId\");\r",
+              "    pm.expect(cols[1].name).to.eql(\"CourseId\");\r",
+              "    pm.expect(cols[2].name).to.eql(\"count(1)\");\r",
+              "\r",
+              "    /* 4️⃣ There must be ZERO rows */\r",
+              "    pm.expect(res.manifest.total_row_count, \"Rows exist when none expected\").to.eql(0);\r",
+              "    pm.expect(res.manifest.total_chunk_count, \"Chunks exist when none expected\").to.eql(0);\r",
+              "\r",
+              "    /* 5️⃣ Result object must be EMPTY */\r",
+              "    pm.expect(res.result, \"Result object is missing\").to.be.an(\"object\");\r",
+              "    pm.expect(Object.keys(res.result).length, \"Result object is not empty\").to.eql(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MedrioUserId , CourseId, COUNT(*) FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY MedrioUserId, CourseId HAVING COUNT(*)>1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Check Uniqueness of Medrio and CourseId",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS total, COUNT(DISTINCT MedrioUserId,CourseId) AS distincts FROM edc_etl_dev_bran_04.gold.elearning_status;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Distinct MedrioUserId",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Validate empty result for Databricks query response\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Hard check: Query execution MUST succeed */\r",
+              "    pm.expect(json.status.state,\"Query did not succeed\").to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest-level validation (SOURCE OF TRUTH) */\r",
+              "    pm.expect(json.manifest.total_row_count,\"Unexpected rows returned\").to.eql(0);\r",
+              "\r",
+              "    pm.expect(json.manifest.total_chunk_count,\"Chunks exist despite zero rows\").to.eql(0);\r",
+              "\r",
+              "    /* 3. Ensure response is not truncated */\r",
+              "    pm.expect(json.manifest.truncated,\"Response is truncated\").to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(Object.keys(json.result).length,\"Result object is not empty\").to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema integrity check (even with no data) */\r",
+              "    const columns = json.manifest.schema.columns;\r",
+              "\r",
+              "    pm.expect(columns.length,\"Unexpected number of columns\").to.eql(2);\r",
+              "\r",
+              "    pm.expect(columns[0].name).to.eql(\"Email\");\r",
+              "    pm.expect(columns[1].name).to.eql(\"count(DISTINCT MedrioUserId)\");\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT Email, COUNT(DISTINCT MedrioUserId) FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY Email HAVING COUNT(DISTINCT MedrioUserId)>1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Distinct Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Validate empty result for Databricks query response\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Hard stop: query must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest is the source of truth for emptiness */\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_row_count,\r",
+              "        \"Rows returned when none were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. No truncation allowed */\r",
+              "    pm.expect(\r",
+              "        json.manifest.truncated,\r",
+              "        \"Response is unexpectedly truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema integrity check */\r",
+              "    const columns = json.manifest.schema.columns;\r",
+              "\r",
+              "    pm.expect(\r",
+              "        columns.length,\r",
+              "        \"Unexpected column count\"\r",
+              "    ).to.eql(2);\r",
+              "\r",
+              "    pm.expect(columns[0].name).to.eql(\"MedrioUserId\");\r",
+              "    pm.expect(columns[1].name).to.eql(\"count(DISTINCT Email)\");\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MedrioUserId, COUNT(DISTINCT Email) FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY MedrioUserId HAVING COUNT(DISTINCT Email)>1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Name Drift",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Validate empty result for Databricks query response\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Query must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest-level emptiness check (authoritative) */\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_row_count,\r",
+              "        \"Rows returned when none were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. Response must not be truncated */\r",
+              "    pm.expect(\r",
+              "        json.manifest.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result).length,\r",
+              "        \"Result object contains unexpected data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema validation (single column) */\r",
+              "    const columns = json.manifest.schema.columns;\r",
+              "\r",
+              "    pm.expect(\r",
+              "        columns.length,\r",
+              "        \"Unexpected number of columns\"\r",
+              "    ).to.eql(1);\r",
+              "\r",
+              "    pm.expect(columns[0].name).to.eql(\"MedrioUserId\");\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MedrioUserId FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY MedrioUserId HAVING COUNT(DISTINCT FirstName)>1 OR COUNT(DISTINCT LastName)>1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Valid Email Pattern",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Validate empty result for Databricks query response\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Query must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest is authoritative for emptiness */\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_row_count,\r",
+              "        \"Rows returned when none were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. Response must not be truncated */\r",
+              "    pm.expect(\r",
+              "        json.manifest.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result).length,\r",
+              "        \"Result object contains unexpected data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema validation (single column: Email) */\r",
+              "    const columns = json.manifest.schema.columns;\r",
+              "\r",
+              "    pm.expect(\r",
+              "        columns.length,\r",
+              "        \"Unexpected number of columns\"\r",
+              "    ).to.eql(1);\r",
+              "\r",
+              "    pm.expect(columns[0].name).to.eql(\"Email\");\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT Email FROM edc_etl_dev_bran_04.gold.elearning_status WHERE Email NOT RLIKE '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\\\.[A-Za-z]{2,}$';\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there any Anonymous User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Validate empty result for Databricks query response\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Query execution must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest-level emptiness validation (authoritative) */\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_row_count,\r",
+              "        \"Rows returned when none were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. Response must not be truncated */\r",
+              "    pm.expect(\r",
+              "        json.manifest.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result).length,\r",
+              "        \"Result object contains unexpected data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema validation (12 columns, exact order) */\r",
+              "    const columns = json.manifest.schema.columns;\r",
+              "    const expectedColumns = [\r",
+              "        \"MedrioUserId\",\r",
+              "        \"ElevateUserId\",\r",
+              "        \"FirstName\",\r",
+              "        \"LastName\",\r",
+              "        \"Email\",\r",
+              "        \"CourseName\",\r",
+              "        \"CourseId\",\r",
+              "        \"CourseStatus\",\r",
+              "        \"CourseRegDate\",\r",
+              "        \"CourseCompletionDate\",\r",
+              "        \"IsCompleted\",\r",
+              "        \"StudyId\"\r",
+              "    ];\r",
+              "\r",
+              "    pm.expect(\r",
+              "        columns.length,\r",
+              "        \"Unexpected number of columns\"\r",
+              "    ).to.eql(expectedColumns.length);\r",
+              "\r",
+              "    columns.forEach((col, index) => {\r",
+              "        pm.expect(\r",
+              "            col.name,\r",
+              "            `Column mismatch at position ${index}`\r",
+              "        ).to.eql(expectedColumns[index]);\r",
+              "    });\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE MedrioUserId IS NULL OR Email IS NULL OR TRIM(FirstName)='' OR TRIM(LastName)='';\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify the combo One Course Id and One Course Name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks empty result validation (no variables)\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Query execution must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status && json.status.state,\r",
+              "        \"Query did not succeed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Emptiness is authoritative via manifest */\r",
+              "    pm.expect(\r",
+              "        json.manifest && json.manifest.total_row_count,\r",
+              "        \"Unexpected rows returned\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest.total_chunk_count,\r",
+              "        \"Unexpected chunks returned\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. Response must not be truncated */\r",
+              "    pm.expect(\r",
+              "        json.manifest.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema must exist even when empty */\r",
+              "    const columns = json.manifest.schema.columns;\r",
+              "\r",
+              "    pm.expect(\r",
+              "        columns.length,\r",
+              "        \"Schema columns missing\"\r",
+              "    ).to.be.above(0);\r",
+              "\r",
+              "    columns.forEach(col => {\r",
+              "        pm.expect(col.name, \"Column name missing\").to.exist;\r",
+              "        pm.expect(col.type_name, \"Column type missing\").to.exist;\r",
+              "    });\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT CourseId, COUNT(DISTINCT CourseName) AS name_count FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY CourseId HAVING COUNT(DISTINCT CourseName) > 1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Course Status Values (Elevate Behavior)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseStatus NOT IN ('Registered','In Progress','Completed','Failed','Dropped');\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Completed Course having Completed Date or Not",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks query returned EMPTY rows\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Query execution must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status?.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest is the source of truth: ZERO rows */\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_row_count,\r",
+              "        \"Rows were returned but expected EMPTY result\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. Response must not be truncated */\r",
+              "    pm.expect(\r",
+              "        json.manifest?.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema must still exist (structure integrity) */\r",
+              "    pm.expect(\r",
+              "        json.manifest?.schema?.columns?.length,\r",
+              "        \"Schema columns missing\"\r",
+              "    ).to.be.above(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE IsCompleted = true AND CourseCompletionDate IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Not Completed Course Not having Completed Date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks query returned EMPTY rows\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    /* 1. Query execution must succeed */\r",
+              "    pm.expect(\r",
+              "        json.status?.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    /* 2. Manifest is the source of truth: ZERO rows */\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_row_count,\r",
+              "        \"Rows were returned but EMPTY rows were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 3. Response must not be truncated */\r",
+              "    pm.expect(\r",
+              "        json.manifest?.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    /* 4. Result object must be empty */\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    /* 5. Schema must exist even when rows are empty */\r",
+              "    pm.expect(\r",
+              "        json.manifest?.schema?.columns?.length,\r",
+              "        \"Schema is missing\"\r",
+              "    ).to.be.above(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE IsCompleted = false AND CourseCompletionDate IS NOT NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Completion Date vs IsCompleted mismatch",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks query returned EMPTY rows\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    // 1. Query must succeed\r",
+              "    pm.expect(\r",
+              "        json.status?.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    // 2. Authoritative empty result check\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_row_count,\r",
+              "        \"Rows returned when EMPTY rows were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 3. No truncation allowed\r",
+              "    pm.expect(\r",
+              "        json.manifest?.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    // 4. Result payload must be empty\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 5. Schema must exist even when no rows\r",
+              "    pm.expect(\r",
+              "        json.manifest?.schema?.columns?.length,\r",
+              "        \"Schema is missing\"\r",
+              "    ).to.be.above(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE (CourseCompletionDate IS NULL AND IsCompleted = true) OR (CourseCompletionDate IS NOT NULL AND IsCompleted = false);\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there Completion Date Before Registration Date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks query returned EMPTY rows\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    // 1. Query must succeed\r",
+              "    pm.expect(\r",
+              "        json.status?.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    // 2. Empty rows validation (source of truth)\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_row_count,\r",
+              "        \"Rows returned when EMPTY rows were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 3. No truncation allowed\r",
+              "    pm.expect(\r",
+              "        json.manifest?.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    // 4. Result payload must be empty\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 5. Schema must exist even when no data\r",
+              "    pm.expect(\r",
+              "        json.manifest?.schema?.columns?.length,\r",
+              "        \"Schema is missing\"\r",
+              "    ).to.be.above(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseCompletionDate < CourseRegDate;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there Completion Date is Future Date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks query returned EMPTY rows\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    // 1. Query must succeed\r",
+              "    pm.expect(\r",
+              "        json.status?.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    // 2. Empty rows validation (source of truth)\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_row_count,\r",
+              "        \"Rows returned when EMPTY rows were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 3. No truncation allowed\r",
+              "    pm.expect(\r",
+              "        json.manifest?.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    // 4. Result payload must be empty\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 5. Schema must exist even when no data\r",
+              "    pm.expect(\r",
+              "        json.manifest?.schema?.columns?.length,\r",
+              "        \"Schema is missing\"\r",
+              "    ).to.be.above(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseRegDate > CURRENT_DATE() OR CourseCompletionDate > CURRENT_DATE();\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there Any Duplicate Rows",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Databricks query returned EMPTY rows\", function () {\r",
+              "\r",
+              "    const json = pm.response.json();\r",
+              "\r",
+              "    // 1. Query must succeed\r",
+              "    pm.expect(\r",
+              "        json.status?.state,\r",
+              "        \"Query execution failed\"\r",
+              "    ).to.eql(\"SUCCEEDED\");\r",
+              "\r",
+              "    // 2. Empty rows validation (source of truth)\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_row_count,\r",
+              "        \"Rows returned when EMPTY rows were expected\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    pm.expect(\r",
+              "        json.manifest?.total_chunk_count,\r",
+              "        \"Chunks exist despite zero rows\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 3. No truncation allowed\r",
+              "    pm.expect(\r",
+              "        json.manifest?.truncated,\r",
+              "        \"Response is truncated\"\r",
+              "    ).to.be.false;\r",
+              "\r",
+              "    // 4. Result payload must be empty\r",
+              "    pm.expect(\r",
+              "        Object.keys(json.result || {}).length,\r",
+              "        \"Result object contains data\"\r",
+              "    ).to.eql(0);\r",
+              "\r",
+              "    // 5. Schema must exist even when no data\r",
+              "    pm.expect(\r",
+              "        json.manifest?.schema?.columns?.length,\r",
+              "        \"Schema is missing\"\r",
+              "    ).to.be.above(0);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MedrioUserId, FirstName, LastName, Email, CourseId, CourseName, CourseStatus, CourseRegDate, CourseCompletionDate, IsCompleted, COUNT(*) AS dup_count FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY MedrioUserId, FirstName, LastName, Email, CourseId, CourseName, CourseStatus, CourseRegDate, CourseCompletionDate, IsCompleted HAVING COUNT(*) > 1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there any Abnormal Course Duration",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest presence\r",
+              "pm.test(\"Manifest exists\", function () {\r",
+              "    pm.expect(res).to.have.property(\"manifest\");\r",
+              "});\r",
+              "\r",
+              "// 4. Schema validation – exact column contract\r",
+              "const expectedColumns = [\r",
+              "    \"MedrioUserId\",\r",
+              "    \"CourseId\",\r",
+              "    \"days\",\r",
+              "    \"lower_bound\",\r",
+              "    \"upper_bound\"\r",
+              "];\r",
+              "\r",
+              "pm.test(\"Schema columns are correct\", function () {\r",
+              "    const actualCols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(actualCols).to.eql(expectedColumns);\r",
+              "});\r",
+              "\r",
+              "// 5. DQ logic – zero rows = PASS\r",
+              "pm.test(\"No IQR duration outliers detected\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 6. Safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"warehouse_id\": \"{{warehouse_id}}\",\r\n  \"statement\": \"WITH d AS (SELECT MedrioUserId, CourseId, DATEDIFF(CourseCompletionDate, CourseRegDate) AS days FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseCompletionDate IS NOT NULL AND CourseRegDate IS NOT NULL), q AS (SELECT percentile_approx(days, 0.25) AS q1, percentile_approx(days, 0.75) AS q3 FROM d), b AS (SELECT q1, q3, (q3 - q1) AS iqr, (q1 - 1.5 * (q3 - q1)) AS lower_bound, (q3 + 1.5 * (q3 - q1)) AS upper_bound FROM q) SELECT d.MedrioUserId, d.CourseId, d.days, b.lower_bound, b.upper_bound FROM d CROSS JOIN b WHERE d.days < b.lower_bound OR d.days > b.upper_bound;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there any Negative Course Duration",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP-level validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution status\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res).to.have.property(\"status\");\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest presence\r",
+              "pm.test(\"Manifest is present\", function () {\r",
+              "    pm.expect(res).to.have.property(\"manifest\");\r",
+              "});\r",
+              "\r",
+              "// 4. Schema validation\r",
+              "pm.test(\"Schema contains expected structure\", function () {\r",
+              "    pm.expect(res.manifest).to.have.property(\"schema\");\r",
+              "    pm.expect(res.manifest.schema).to.have.property(\"columns\");\r",
+              "    pm.expect(res.manifest.schema.columns).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "// 5. Column sanity check (non-empty schema)\r",
+              "pm.test(\"Schema has columns defined\", function () {\r",
+              "    pm.expect(res.manifest.schema.column_count).to.be.above(0);\r",
+              "});\r",
+              "\r",
+              "// 6. Row count validation\r",
+              "pm.test(\"Row count is available\", function () {\r",
+              "    pm.expect(res.manifest).to.have.property(\"total_row_count\");\r",
+              "    pm.expect(res.manifest.total_row_count).to.be.a(\"number\");\r",
+              "});\r",
+              "\r",
+              "// 7. DQ logic interpretation\r",
+              "pm.test(\"DQ rule evaluation is correct\", function () {\r",
+              "    if (res.manifest.total_row_count === 0) {\r",
+              "        pm.expect(true, \"No DQ violations detected\").to.be.true;\r",
+              "    } else {\r",
+              "        pm.expect(res.result).to.not.eql({});\r",
+              "    }\r",
+              "});\r",
+              "\r",
+              "// 8. Truncation check (important for large result sets)\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              "\r",
+              "// 9. Fail hard if statement succeeded but schema is missing\r",
+              "pm.test(\"Succeeded statements must return schema\", function () {\r",
+              "    pm.expect(res.manifest.schema).to.not.be.undefined;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseCompletionDate IS NOT NULL AND DATEDIFF(CourseCompletionDate, CourseRegDate) < 0;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verification of Extreme Course Registered Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution status\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res).to.have.property(\"status\");\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest presence\r",
+              "pm.test(\"Manifest exists\", function () {\r",
+              "    pm.expect(res).to.have.property(\"manifest\");\r",
+              "});\r",
+              "\r",
+              "// 4. Schema validation\r",
+              "pm.test(\"Schema contains columns\", function () {\r",
+              "    pm.expect(res.manifest).to.have.property(\"schema\");\r",
+              "    pm.expect(res.manifest.schema.columns).to.be.an(\"array\");\r",
+              "    pm.expect(res.manifest.schema.column_count).to.be.above(0);\r",
+              "});\r",
+              "\r",
+              "// 5. Required columns validation\r",
+              "const expectedCols = [\"MedrioUserId\", \"course_count\", \"upper_bound\"];\r",
+              "\r",
+              "pm.test(\"Expected columns are present\", function () {\r",
+              "    const actualCols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    expectedCols.forEach(col => {\r",
+              "        pm.expect(actualCols).to.include(col);\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "// 6. Row count validation\r",
+              "pm.test(\"Row count is available\", function () {\r",
+              "    pm.expect(res.manifest).to.have.property(\"total_row_count\");\r",
+              "    pm.expect(res.manifest.total_row_count).to.be.a(\"number\");\r",
+              "});\r",
+              "\r",
+              "// 7. DQ interpretation (PASS if zero rows)\r",
+              "pm.test(\"DQ rule evaluation is correct\", function () {\r",
+              "    if (res.manifest.total_row_count === 0) {\r",
+              "        pm.expect(true, \"No high-enrollment outliers detected\").to.be.true;\r",
+              "    } else {\r",
+              "        pm.expect(res.result).to.not.eql({});\r",
+              "    }\r",
+              "});\r",
+              "\r",
+              "// 8. Logical correctness (if rows exist)\r",
+              "if (res.manifest.total_row_count > 0 && res.result?.data_array) {\r",
+              "    pm.test(\"All returned users exceed IQR upper bound\", function () {\r",
+              "        res.result.data_array.forEach(row => {\r",
+              "            const courseCount = row[1];   // course_count\r",
+              "            const upperBound  = row[2];   // upper_bound\r",
+              "\r",
+              "            pm.expect(\r",
+              "                courseCount > upperBound,\r",
+              "                `User has course_count=${courseCount} not exceeding upper_bound=${upperBound}`\r",
+              "            ).to.be.true;\r",
+              "        });\r",
+              "    });\r",
+              "}\r",
+              "\r",
+              "// 9. Truncation check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"warehouse_id\": \"{{warehouse_id}}\",\r\n  \"statement\": \"WITH u AS (SELECT MedrioUserId, COUNT(DISTINCT CourseId) AS course_count FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY MedrioUserId), q AS (SELECT percentile_approx(course_count, 0.25) AS q1, percentile_approx(course_count, 0.75) AS q3 FROM u), b AS (SELECT q1, q3, (q3 - q1) AS iqr, (q3 + 1.5 * (q3 - q1)) AS upper_bound FROM q) SELECT u.MedrioUserId, u.course_count, b.upper_bound FROM u CROSS JOIN b WHERE u.course_count > b.upper_bound;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Latest Course Registration Date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MAX(CourseRegDate) AS latest_registration FROM edc_etl_dev_bran_04.gold.elearning_status;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Latest Course Completion Date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MAX(CourseCompletionDate) AS latest_completion FROM edc_etl_dev_bran_04.gold.elearning_status;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Time-Ordered Volume",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT CourseRegDate, COUNT(*) AS daily_count FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY CourseRegDate ORDER BY CourseRegDate DESC;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Volume-Ranked Dates",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT CourseRegDate, COUNT(*) AS row_count FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY CourseRegDate ORDER BY row_count DESC;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract ElevateUserId NULL Rate Information",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest & schema validation\r",
+              "pm.test(\"Schema contains null_userids column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"null_userids\");\r",
+              "});\r",
+              "\r",
+              "// 4. COUNT(*) must return exactly one row\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract and normalize count (Databricks returns STRING)\r",
+              "const nullCount = Number(res.result.data_array[0][0]);\r",
+              "\r",
+              "// 6. DQ assertion\r",
+              "pm.test(\"Null MedrioUserId count is zero\", function () {\r",
+              "    pm.expect(nullCount).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 7. Safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS null_userids FROM edc_etl_dev_bran_04.gold.elearning_status WHERE MedrioUserId IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Email-Id NULL Rate Information",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest and schema validation\r",
+              "pm.test(\"Schema contains null_emails column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"null_emails\");\r",
+              "});\r",
+              "\r",
+              "// 4. COUNT(*) must return exactly one row\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract and normalize count (Databricks returns STRING)\r",
+              "const nullEmailCount = Number(res.result.data_array[0][0]);\r",
+              "\r",
+              "// 6. DQ assertion\r",
+              "pm.test(\"Null Email count is zero\", function () {\r",
+              "    pm.expect(nullEmailCount).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 7. Truncation safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS null_emails FROM edc_etl_dev_bran_04.gold.elearning_status WHERE Email IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Course-Id NULL Rate Information",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest and schema validation\r",
+              "pm.test(\"Schema contains null_courses column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"null_courses\");\r",
+              "});\r",
+              "\r",
+              "// 4. COUNT(*) must return exactly one row\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract and normalize count (Databricks returns STRING)\r",
+              "const nullCourseCount = Number(res.result.data_array[0][0]);\r",
+              "\r",
+              "// 6. DQ assertion\r",
+              "pm.test(\"Null CourseId count is zero\", function () {\r",
+              "    pm.expect(nullCourseCount).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 7. Truncation safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS null_courses FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseId IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Course Status NULL Rate Information",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest and schema validation\r",
+              "pm.test(\"Schema contains null_status column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"null_status\");\r",
+              "});\r",
+              "\r",
+              "// 4. COUNT(*) must return exactly one row\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract and normalize count (Databricks returns STRING)\r",
+              "const nullStatusCount = Number(res.result.data_array[0][0]);\r",
+              "\r",
+              "// 6. DQ assertion\r",
+              "pm.test(\"Null CourseStatus count is zero\", function () {\r",
+              "    pm.expect(nullStatusCount).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 7. Truncation safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS null_status FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseStatus IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Registration Status NULL Rate Information",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest and schema validation\r",
+              "pm.test(\"Schema contains null_reg_dates column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"null_reg_dates\");\r",
+              "});\r",
+              "\r",
+              "// 4. COUNT(*) must return exactly one row\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract and normalize count (Databricks returns STRING)\r",
+              "const nullRegDateCount = Number(res.result.data_array[0][0]);\r",
+              "\r",
+              "// 6. DQ assertion\r",
+              "pm.test(\"Null CourseRegDate count is zero\", function () {\r",
+              "    pm.expect(nullRegDateCount).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 7. Truncation safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS null_reg_dates FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseRegDate IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Is-Completed Status NULL Rate Information",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest and schema validation\r",
+              "pm.test(\"Schema contains null_flags column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"null_flags\");\r",
+              "});\r",
+              "\r",
+              "// 4. COUNT(*) must return exactly one row\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract and normalize count (Databricks returns STRING)\r",
+              "const nullFlagCount = Number(res.result.data_array[0][0]);\r",
+              "\r",
+              "// 6. DQ assertion\r",
+              "pm.test(\"Null IsCompleted flag count is zero\", function () {\r",
+              "    pm.expect(nullFlagCount).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 7. Truncation safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT COUNT(*) AS null_flags FROM edc_etl_dev_bran_04.gold.elearning_status WHERE IsCompleted IS NULL;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Latest Refresh Date",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Schema validation\r",
+              "pm.test(\"Schema contains last_refresh_date_utc column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"last_refresh_date_utc\");\r",
+              "});\r",
+              "\r",
+              "// 4. Exactly one row must be returned\r",
+              "pm.test(\"Exactly one result row returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract refresh date (UTC, date-only)\r",
+              "const refreshDateStr = res.result.data_array[0][0];\r",
+              "const refreshDate = new Date(refreshDateStr + \"T00:00:00Z\");\r",
+              "\r",
+              "// 6. Compute yesterday (UTC, date-only)\r",
+              "const now = new Date();\r",
+              "const yesterdayUTC = new Date(Date.UTC(\r",
+              "    now.getUTCFullYear(),\r",
+              "    now.getUTCMonth(),\r",
+              "    now.getUTCDate() - 1\r",
+              "));\r",
+              "\r",
+              "// 7. Normalize both dates to YYYY-MM-DD\r",
+              "const refreshYYYYMMDD = refreshDate.toISOString().slice(0, 10);\r",
+              "const yesterdayYYYYMMDD = yesterdayUTC.toISOString().slice(0, 10);\r",
+              "\r",
+              "// 8. Hard assertion: MUST be yesterday\r",
+              "pm.test(\"Data refresh date is exactly yesterday (UTC)\", function () {\r",
+              "    pm.expect(refreshYYYYMMDD).to.eql(yesterdayYYYYMMDD);\r",
+              "});\r",
+              "\r",
+              "// 9. Safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.bronze.elevate__last_refresh;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Validate MedrioUserId is mapped to multiple ElevateUserIds",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest validation\r",
+              "pm.test(\"Manifest exists\", function () {\r",
+              "    pm.expect(res).to.have.property(\"manifest\");\r",
+              "});\r",
+              "\r",
+              "// 4. Schema validation\r",
+              "pm.test(\"Schema contains expected columns\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"MedrioUserId\");\r",
+              "    pm.expect(cols).to.include(\"ElevateUserIdCount\");\r",
+              "});\r",
+              "\r",
+              "// 5. DQ logic: zero rows = PASS\r",
+              "pm.test(\"No users with multiple ElevateUserIds\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 6. Result safety (no truncation)\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT MedrioUserId, COUNT(DISTINCT ElevateUserId) as ElevateUserIdCount FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY MedrioUserId HAVING COUNT(DISTINCT ElevateUserId) > 1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Validate ElevateUserId is mapped to multiple MedrioUserIds",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest validation\r",
+              "pm.test(\"Manifest exists\", function () {\r",
+              "    pm.expect(res).to.have.property(\"manifest\");\r",
+              "});\r",
+              "\r",
+              "// 4. Schema validation\r",
+              "pm.test(\"Schema contains expected columns\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"ElevateUserId\");\r",
+              "    pm.expect(cols).to.include(\"MedrioUserIdCount\");\r",
+              "});\r",
+              "\r",
+              "// 5. DQ logic: zero rows = PASS\r",
+              "pm.test(\"No ElevateUserId mapped to multiple MedrioUserIds\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 6. Safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT ElevateUserId, COUNT(DISTINCT MedrioUserId) as MedrioUserIdCount FROM edc_etl_dev_bran_04.gold.elearning_status GROUP BY ElevateUserId HAVING COUNT(DISTINCT MedrioUserId) > 1;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Verify is there any records before '2021-01-01'",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest presence\r",
+              "pm.test(\"Manifest exists\", function () {\r",
+              "    pm.expect(res).to.have.property(\"manifest\");\r",
+              "});\r",
+              "\r",
+              "// 4. Schema validation – exact column contract\r",
+              "const expectedColumns = [\r",
+              "    \"MedrioUserId\",\r",
+              "    \"ElevateUserId\",\r",
+              "    \"FirstName\",\r",
+              "    \"LastName\",\r",
+              "    \"Email\",\r",
+              "    \"CourseName\",\r",
+              "    \"CourseId\",\r",
+              "    \"CourseStatus\",\r",
+              "    \"CourseRegDate\",\r",
+              "    \"CourseCompletionDate\",\r",
+              "    \"IsCompleted\",\r",
+              "    \"StudyId\"\r",
+              "];\r",
+              "\r",
+              "pm.test(\"Schema columns are correct and complete\", function () {\r",
+              "    const actualCols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(actualCols).to.eql(expectedColumns);\r",
+              "});\r",
+              "\r",
+              "// 5. DQ logic – zero rows = PASS\r",
+              "pm.test(\"No DQ violations returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(0);\r",
+              "});\r",
+              "\r",
+              "// 6. Result safety\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT * FROM edc_etl_dev_bran_04.gold.elearning_status WHERE CourseRegDate < '2021-01-01';\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Query - Extract Distinct Course Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse response\r",
+              "const res = pm.response.json();\r",
+              "\r",
+              "// 1. HTTP status validation\r",
+              "pm.test(\"HTTP status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.eql(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Statement execution validation\r",
+              "pm.test(\"Statement execution succeeded\", function () {\r",
+              "    pm.expect(res.status.state).to.eql(\"SUCCEEDED\");\r",
+              "});\r",
+              "\r",
+              "// 3. Manifest and schema validation\r",
+              "pm.test(\"Schema contains CourseStatus column\", function () {\r",
+              "    const cols = res.manifest.schema.columns.map(c => c.name);\r",
+              "    pm.expect(cols).to.include(\"CourseStatus\");\r",
+              "});\r",
+              "\r",
+              "// 4. Exactly one row returned (distinct value check)\r",
+              "pm.test(\"Exactly one distinct CourseStatus returned\", function () {\r",
+              "    pm.expect(res.manifest.total_row_count).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "// 5. Extract CourseStatus value\r",
+              "const courseStatus = res.result.data_array[0][0];\r",
+              "\r",
+              "// 6. Allowed values validation\r",
+              "const allowedStatuses = [\r",
+              "    \"paid\",\r",
+              "    \"unpaid\",\r",
+              "    \"completed\",\r",
+              "    \"in_progress\"\r",
+              "];\r",
+              "\r",
+              "pm.test(\"CourseStatus value is allowed\", function () {\r",
+              "    pm.expect(allowedStatuses).to.include(courseStatus);\r",
+              "});\r",
+              "\r",
+              "// 7. Safety check\r",
+              "pm.test(\"Result is not truncated\", function () {\r",
+              "    pm.expect(res.manifest.truncated).to.be.false;\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{db_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"warehouse_id\": \"{{warehouse_id}}\",\r\n    \"statement\": \"SELECT DISTINCT CourseStatus FROM edc_etl_dev_bran_04.gold.elearning_status;\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{db_host}}/api/2.0/sql/statements",
+          "host": [
+            "{{db_host}}"
+          ],
+          "path": [
+            "api",
+            "2.0",
+            "sql",
+            "statements"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
